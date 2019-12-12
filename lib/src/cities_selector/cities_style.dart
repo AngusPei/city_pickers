@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 
 // 公共的基本样式
 class BaseStyle {
-  double fontSize;
-  Color color;
-  Color activeColor;
-  Color backgroundColor;
-  double height;
-  Color backgroundActiveColor;
+  final double fontSize;
+  final String fontFamily; 
+  final Color color;
+  final Color activeColor;
+  final Color backgroundColor;
+  final double height;
+  final Color backgroundActiveColor;
 
   BaseStyle(
       {this.color,
+      this.fontFamily,
       this.fontSize,
       this.height,
       this.activeColor,
@@ -19,6 +21,7 @@ class BaseStyle {
 
   BaseStyle copyWith(
       {double fontSize,
+      String fontFamily,
       Color color,
       double height,
       Color activeColor,
@@ -27,6 +30,7 @@ class BaseStyle {
 //    print("copyWidth >>> fontSize: ${fontSize ?? this.fontSize}");
     return BaseStyle(
         fontSize: fontSize ?? this.fontSize,
+        fontFamily: fontFamily?? this.fontFamily,
         color: color ?? this.color,
         height: height ?? this.height,
         activeColor: activeColor ?? this.activeColor,
@@ -39,6 +43,7 @@ class BaseStyle {
     if (other == null) return this;
     return copyWith(
         fontSize: other.fontSize,
+        fontFamily: other.fontFamily,
         color: other.color,
         height: other.height,
         activeColor: other.activeColor,

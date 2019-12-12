@@ -54,6 +54,9 @@ class Alpha extends StatefulWidget {
   final double alphaItemSize;
   final List<String> alphas;
 
+  /// 字体样式
+  final String alphaItemFontFamily;
+
   /// 当选中的字母发生改变
   final AlphaChanged onAlphaChange;
 
@@ -75,7 +78,6 @@ class Alpha extends StatefulWidget {
 
   Alpha(
       {
-
       /// 字母列表的高度大小与字体大小
       this.alphaItemSize = 14,
 
@@ -90,7 +92,8 @@ class Alpha extends StatefulWidget {
       this.activeBgColor = Colors.green,
       this.bgColor = Colors.yellow,
       this.fontColor = Colors.black,
-      this.fontActiveColor = Colors.yellow});
+      this.fontActiveColor = Colors.yellow, 
+      this.alphaItemFontFamily});
 
   @override
   AlphaState createState() {
@@ -187,6 +190,7 @@ class AlphaState extends State<Alpha> {
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: widget.alphaItemSize,
+                fontFamily: widget.alphaItemFontFamily,
                 color: isTouched ? widget.fontActiveColor : widget.fontColor)),
       ));
     }

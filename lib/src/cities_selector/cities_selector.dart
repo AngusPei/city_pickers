@@ -44,16 +44,25 @@ class CitiesSelector extends StatefulWidget {
   /// 右侧Bar字体的大小
   final double tagBarFontSize;
 
+  /// 右侧Bar字体样式
+  final String tagBarFontFamily;
+
   /// 城市列表每一个Item的高度
 //  final double cityItemHeight;
   /// 城市列表每一个Item的字体大小
   final double cityItemFontSize;
+
+  /// 城市列表每个Item的字体样式
+  final String cityItemFontFamily;
 
   /// 每一个类别的城市顶部的标题的高度
   final double topIndexHeight;
 
   /// 每一个类别的城市顶部的标题的字体大小
   final double topIndexFontSize;
+
+  /// 每一个类别的城市顶部的标题字体样式
+  final String topIndexFontFamily;
 
   /// 每一个类别的城市顶部的标题的样式
   final Color topIndexFontColor;
@@ -86,6 +95,9 @@ class CitiesSelector extends StatefulWidget {
 //    this.itemSelectBgColor = Colors.white,
     this.itemFontColor = Colors.black,
     this.itemSelectFontColor = Colors.red,
+    this.tagBarFontFamily,
+    this.cityItemFontFamily,
+    this.topIndexFontFamily,
   });
 
   @override
@@ -129,6 +141,9 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   /// 用户可定义的, 选项中字体的大小
   double itemFontSize;
 
+  /// 用户可定义的，选项中字体的样式
+  String itemFontFamily;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -156,6 +171,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     topTagHeight = widget.topIndexHeight;
 //    itemHeight = widget.cityItemHeight;
     itemFontSize = widget.cityItemFontSize;
+    itemFontFamily = widget.cityItemFontFamily;
   }
 
   void formatHotCities() {
@@ -191,7 +207,11 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   List<CityOffsetRange> _initOffsetRangList() {
     if (_offsetTagRangeList.isEmpty) {
       double itemContainerHeight =
-          _key0.currentContext.findRenderObject().paintBounds.size.height;
+          _key0.currentContext
+              .findRenderObject()
+              .paintBounds
+              .size
+              .height;
 
       double offstageHeight = topTagHeight;
 
@@ -207,7 +227,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   _dynamicChangeTopStagePosition(double scrollTopOffset) {
     // 应该显示标签的视觉窗口中的对象
     CityOffsetRange tempViewTarget =
-        _offsetTagRangeList.firstWhere((CityOffsetRange range) {
+    _offsetTagRangeList.firstWhere((CityOffsetRange range) {
       return scrollTopOffset > range.start && scrollTopOffset < range.end;
     }, orElse: () => null);
     if (tempViewTarget == null) {
@@ -219,7 +239,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
       return this.setState(() {
         _tagName = tempViewTarget.tag;
         _topOffstageTop =
-            -(scrollTopOffset + topTagHeight - tempViewTarget.end);
+        -(scrollTopOffset + topTagHeight - tempViewTarget.end);
       });
     }
 
@@ -251,7 +271,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     }
     _changeTimer = new Timer(Duration(milliseconds: 30), () {
       CityOffsetRange cityOffsetRange = _offsetTagRangeList.firstWhere(
-          (CityOffsetRange range) => range.tag == alpha,
+              (CityOffsetRange range) => range.tag == alpha,
           orElse: null);
       if (cityOffsetRange != null) {
         _scrollController.jumpTo(cityOffsetRange.start);
@@ -263,7 +283,8 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   Widget _buildCenterModal() {
     return Center(
       child: Card(
-        color: Colors.black54,
+        color: Colors.black26,
+//        color: Colors.grey[850],
         child: Container(
           alignment: Alignment.center,
           width: 80.0,
@@ -288,6 +309,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
       fontColor: widget.tagBarFontColor,
       fontActiveColor: widget.tagBarFontActiveColor,
       alphaItemSize: widget.tagBarFontSize,
+      alphaItemFontFamily: widget.tagBarFontFamily,
       onTouchStart: () {
         this.setState(() {
           _isTouchTagBar = true;
@@ -348,6 +370,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                     softWrap: true,
                     style: TextStyle(
                         fontSize: widget.topIndexFontSize,
+                        fontFamily: widget.topIndexFontFamily,
                         color: widget.topIndexFontColor),
                   ),
                 ),
@@ -358,12 +381,13 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                 child: Center(
                   child: ListTileTheme(
                     selectedColor:
-                        widget.itemSelectFontColor ?? theme.primaryColor,
+                    widget.itemSelectFontColor ?? theme.primaryColor,
                     textColor: widget.itemFontColor ?? theme.accentColor,
                     child: ListTile(
                       selected: selected,
                       title: Text(_cities[index].name,
-                          style: TextStyle(fontSize: itemFontSize)),
+                          style: TextStyle(fontSize: itemFontSize,
+                              fontFamily: itemFontFamily)),
                       onTap: () {
                         Navigator.pop(context, _buildResult(_cities[index]));
                       },
@@ -391,6 +415,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
               softWrap: true,
               style: TextStyle(
                 fontSize: widget.topIndexFontSize,
+                fontFamily: widget.topIndexFontFamily,
                 color: widget.topIndexFontColor,
               ),
             ),
@@ -408,15 +433,91 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     return children;
   }
 
+  Widget _buildSearchInput() {
+    return Container(
+      padding: EdgeInsets.only(left: 18.0,),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+        color: Color(0xFFF5F5F5),
+      ),
+      height: 34,
+      child: Center(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(right: 4.0),
+              child: Icon(
+                Icons.search,
+                color: Colors.black26,
+                size: 16.0,
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.only(top: 9, bottom: 9),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  hintText: '请输入城市名称或首字母查询',
+                  hintStyle: TextStyle(
+                    color: Colors.black26,
+                    fontSize: 12,
+                    textBaseline: TextBaseline.alphabetic,),
+                ),
+                cursorColor: Colors.black26,
+                onChanged: (value) {
+                  debugPrint(value);
+                },
+                style: TextStyle(
+                  textBaseline: TextBaseline.alphabetic,
+                  color: Colors.black,
+                  fontSize: 14,
+                ),
+              ),),
+            IconButton(icon: Icon(Icons.clear, size: 16.0,), onPressed: () {
+              debugPrint("清除输入");
+            })
+          ],
+        ),
+      ),
+    );
+  }
+
+  _buildAppBar() {
+    return AppBar(
+        title: _buildSearchInput(),
+        titleSpacing: 15,
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Color(0xFFFF7043),
+        automaticallyImplyLeading: false,
+        brightness: Brightness.light,
+        actions: <Widget>[
+          GestureDetector(
+            child: Container(
+              padding: EdgeInsets.only(
+                  right: 15),
+              alignment: Alignment.center,
+              child: Text("取消", style: TextStyle(
+                  color: Colors.white, fontSize: 15
+              ),
+              ),
+            ),
+            onTap: () => Navigator.of(context).pop(),
+          ),
+        ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Colors.white,
         resizeToAvoidBottomPadding: false,
-        appBar: AppBar(
-            title: Text(
-          widget.title,
-        )),
+        appBar: _buildAppBar(),
         body: SafeArea(
           bottom: true,
           child: Column(
