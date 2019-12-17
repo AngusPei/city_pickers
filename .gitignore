@@ -11,3 +11,4 @@ build/
 city_pickers.iml
 lib/meta/_province.dart
 flutter_export_environment.sh
+.flutter-plugins-dependencies

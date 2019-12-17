@@ -144,6 +144,9 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   /// 用户可定义的，选项中字体的样式
   String itemFontFamily;
 
+  /// 输入控制器
+  TextEditingController _controller;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -157,6 +160,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     _tagList = CitiesUtils.getValidTagsByCityList(_cities);
 
     _scrollController = new ScrollController();
+    _controller = new TextEditingController();
 
     // 向tag 与 city 列表中加入 自定义数据
     formatHotCities();
@@ -188,6 +192,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
             name: hotCity.name,
             child: []));
       });
+      /// TODO: 热门城市使用标签的方式显示
       _cities.insertAll(0, hotPoints);
       _tagList.insertAll(0, hotTags);
     }
@@ -207,11 +212,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   List<CityOffsetRange> _initOffsetRangList() {
     if (_offsetTagRangeList.isEmpty) {
       double itemContainerHeight =
-          _key0.currentContext
-              .findRenderObject()
-              .paintBounds
-              .size
-              .height;
+          _key0.currentContext.findRenderObject().paintBounds.size.height;
 
       double offstageHeight = topTagHeight;
 
@@ -227,7 +228,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   _dynamicChangeTopStagePosition(double scrollTopOffset) {
     // 应该显示标签的视觉窗口中的对象
     CityOffsetRange tempViewTarget =
-    _offsetTagRangeList.firstWhere((CityOffsetRange range) {
+        _offsetTagRangeList.firstWhere((CityOffsetRange range) {
       return scrollTopOffset > range.start && scrollTopOffset < range.end;
     }, orElse: () => null);
     if (tempViewTarget == null) {
@@ -239,7 +240,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
       return this.setState(() {
         _tagName = tempViewTarget.tag;
         _topOffstageTop =
-        -(scrollTopOffset + topTagHeight - tempViewTarget.end);
+            -(scrollTopOffset + topTagHeight - tempViewTarget.end);
       });
     }
 
@@ -271,7 +272,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     }
     _changeTimer = new Timer(Duration(milliseconds: 30), () {
       CityOffsetRange cityOffsetRange = _offsetTagRangeList.firstWhere(
-              (CityOffsetRange range) => range.tag == alpha,
+          (CityOffsetRange range) => range.tag == alpha,
           orElse: null);
       if (cityOffsetRange != null) {
         _scrollController.jumpTo(cityOffsetRange.start);
@@ -283,8 +284,9 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   Widget _buildCenterModal() {
     return Center(
       child: Card(
-        color: Colors.black26,
-//        color: Colors.grey[850],
+        /// TODO: 当前颜色和透明度应该从外部传入
+        color: Color(0xD9FF7043),
+        // color: Colors.grey[850],
         child: Container(
           alignment: Alignment.center,
           width: 80.0,
@@ -345,59 +347,79 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 //    print("_initTargetCity.code ${_initTargetCity}");
     List<Widget> children = [];
     ThemeData theme = Theme.of(context);
-    children.add(ListView.builder(
-        controller: _scrollController,
-        itemCount: _cities.length,
-        itemBuilder: (context, index) {
-          bool offstage = false;
-          bool selected = _initTargetCity != null &&
-              _initTargetCity.code == _cities[index].code;
-          if (index != 0 &&
-              _cities[index - 1].letter == _cities[index].letter) {
-            offstage = true;
-          }
-          return Column(
-            children: <Widget>[
-              Offstage(
-                offstage: offstage,
-                child: Container(
-                  height: topTagHeight,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 15.0),
-                  color: widget.topIndexBgColor,
-                  child: Text(
-                    _cities[index].letter,
-                    softWrap: true,
-                    style: TextStyle(
-                        fontSize: widget.topIndexFontSize,
-                        fontFamily: widget.topIndexFontFamily,
-                        color: widget.topIndexFontColor),
-                  ),
-                ),
-              ),
-              Container(
-                alignment: Alignment.centerLeft,
-                key: index == 0 ? _key0 : null,
-                child: Center(
-                  child: ListTileTheme(
-                    selectedColor:
-                    widget.itemSelectFontColor ?? theme.primaryColor,
-                    textColor: widget.itemFontColor ?? theme.accentColor,
-                    child: ListTile(
-                      selected: selected,
-                      title: Text(_cities[index].name,
-                          style: TextStyle(fontSize: itemFontSize,
-                              fontFamily: itemFontFamily)),
-                      onTap: () {
-                        Navigator.pop(context, _buildResult(_cities[index]));
-                      },
+    children.add(
+      ListView.builder(
+          controller: _scrollController,
+          itemCount: _cities.length,
+          itemBuilder: (context, index) {
+            bool offstage = false;
+            bool selected = _initTargetCity != null &&
+                _initTargetCity.code == _cities[index].code;
+
+            if (index != 0 &&
+                _cities[index - 1].letter == _cities[index].letter) {
+              offstage = true;
+            }
+            return Column(
+              children: <Widget>[
+                Offstage(
+                  offstage: offstage,
+                  child: Container(
+                    height: topTagHeight,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.only(left: 15.0),
+                    color: widget.topIndexBgColor,
+                    child: Text(
+                      _cities[index].letter,
+                      softWrap: true,
+                      style: TextStyle(
+                          fontSize: widget.topIndexFontSize,
+                          fontFamily: widget.topIndexFontFamily,
+                          color: widget.topIndexFontColor),
                     ),
                   ),
                 ),
-              )
-            ],
-          );
-        }));
+                Container(
+                  alignment: Alignment.centerLeft,
+                  key: index == 0 ? _key0 : null,
+                  child: Center(
+                    child: ListTileTheme(
+                      selectedColor:
+                          widget.itemSelectFontColor ?? theme.primaryColor,
+                      textColor: widget.itemFontColor ?? theme.accentColor,
+                      child: ListTile(
+                        selected: selected,
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text(
+                              _cities[index].name,
+                              style: TextStyle(
+                                fontSize: itemFontSize,
+                                fontFamily: itemFontFamily,
+                              ),
+                            ),
+                            selected
+                                ? Icon(
+                                    Icons.check,
+                                    size: itemFontSize,
+                                    color: widget.itemSelectFontColor,
+                                  )
+                                : Container()
+                          ],
+                        ),
+                        onTap: () {
+                          Navigator.pop(context, _buildResult(_cities[index]));
+                        },
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            );
+          }),
+    );
+
     if (_showTopOffstage) {
       children.add(Positioned(
         top: _topOffstageTop,
@@ -423,6 +445,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         ),
       ));
     }
+
     if (_isTouchTagBar) {
       children.add(_buildCenterModal());
     }
@@ -435,7 +458,9 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 
   Widget _buildSearchInput() {
     return Container(
-      padding: EdgeInsets.only(left: 18.0,),
+      padding: EdgeInsets.only(
+        left: 18.0,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(16.0)),
         color: Color(0xFFF5F5F5),
@@ -455,9 +480,10 @@ class _CitiesSelectorState extends State<CitiesSelector> {
             ),
             Expanded(
               child: TextField(
+                controller: _controller,
                 keyboardType: TextInputType.text,
                 decoration: InputDecoration(
-                  contentPadding: EdgeInsets.only(top: 9, bottom: 9),
+                  isDense: true,
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   disabledBorder: InputBorder.none,
@@ -466,21 +492,31 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                   hintStyle: TextStyle(
                     color: Colors.black26,
                     fontSize: 12,
-                    textBaseline: TextBaseline.alphabetic,),
+                  ),
                 ),
-                cursorColor: Colors.black26,
+
+                /// TODO: 光标颜色应该由外部传入定义
+                cursorColor: Color(0xFFFF7043),
                 onChanged: (value) {
-                  debugPrint(value);
+                  debugPrint("开始查询:$value");
                 },
                 style: TextStyle(
-                  textBaseline: TextBaseline.alphabetic,
                   color: Colors.black,
                   fontSize: 14,
                 ),
-              ),),
-            IconButton(icon: Icon(Icons.clear, size: 16.0,), onPressed: () {
-              debugPrint("清除输入");
-            })
+              ),
+            ),
+            IconButton(
+                icon: Image.asset(
+                  'assets/icons/icon_input_clear.png',
+                  width: 10,
+                  height: 10,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _controller.clear();
+                  });
+                })
           ],
         ),
       ),
@@ -493,18 +529,19 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         titleSpacing: 15,
         centerTitle: false,
         elevation: 0,
+
+        /// TODO: 外部传入
         backgroundColor: Color(0xFFFF7043),
         automaticallyImplyLeading: false,
         brightness: Brightness.light,
         actions: <Widget>[
           GestureDetector(
             child: Container(
-              padding: EdgeInsets.only(
-                  right: 15),
+              padding: EdgeInsets.only(right: 15),
               alignment: Alignment.center,
-              child: Text("取消", style: TextStyle(
-                  color: Colors.white, fontSize: 15
-              ),
+              child: Text(
+                "取消",
+                style: TextStyle(color: Colors.white, fontSize: 15),
               ),
             ),
             onTap: () => Navigator.of(context).pop(),
@@ -522,6 +559,47 @@ class _CitiesSelectorState extends State<CitiesSelector> {
           bottom: true,
           child: Column(
             children: <Widget>[
+              Container(
+                color: Colors.white,
+                height: 44,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14),
+                      child: Text(
+                        '你正在深圳',
+                        style: TextStyle(
+                          color: Color(0xFF212121),
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 14),
+                      child: GestureDetector(
+                        onTap: () => debugPrint('选择县区'),
+                        child: Row(
+                          children: <Widget>[
+                            Text(
+                              '选择县区',
+                              style: TextStyle(
+                                color: Color(0xFF757575),
+                                fontSize: 12,
+                              ),
+                            ),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 12,
+                              color: Color(0xFF9E9E9E),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
                   flex: 1, child: Stack(children: _buildChildren(context))),
             ],
