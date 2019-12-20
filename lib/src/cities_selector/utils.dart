@@ -65,10 +65,13 @@ class CitiesUtils {
     return validTags;
   }
 
-  static List<CityOffsetRange> getOffsetRangeByCitiesList(
-      {@required List<Point> lists,
-      @required double itemHeight,
-      @required double tagHeight}) {
+  /// 偏移区域
+  static List<CityOffsetRange> getOffsetRangeByCitiesList({
+    @required List<Point> lists,
+    @required double itemHeight,
+    @required double tagHeight,
+    @required double hotCityHeight,
+  }) {
     List<TagCount> categoriesList = [];
     List<CityOffsetRange> result = [];
 
@@ -86,13 +89,23 @@ class CitiesUtils {
       });
       target.count += 1;
     });
+
     categoriesList.forEach((TagCount item) {
 //      print("item: ${item.letter}, ${item.count}");
       double start = result.isNotEmpty ? result.last.end : 0;
-      result.add(CityOffsetRange(
+      if (item.letter == '#') {
+        /// 添加热门城市的偏移值
+        result.add(CityOffsetRange(
+            start: start,
+            end: start + hotCityHeight,
+            tag: item.letter.toUpperCase()));
+      } else {
+        result.add(CityOffsetRange(
           start: start,
           end: start + item.count * itemHeight + tagHeight,
-          tag: item.letter.toUpperCase()));
+          tag: item.letter.toUpperCase(),
+        ));
+      }
     });
     return result;
   }
@@ -103,5 +116,6 @@ class HotCity {
   final String name;
   final int id;
   final String tag;
+
   HotCity({@required this.name, @required this.id, this.tag = "#"});
 }

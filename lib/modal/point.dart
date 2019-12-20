@@ -7,6 +7,7 @@ class Point {
   int code;
   List<Point> child;
   int depth;
+  /// 使用字符串数据
   String letter;
   String name = NoName;
   Point get nullPoint => Point(code: null, child: [], letter: null, name: null);

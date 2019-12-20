@@ -30,7 +30,7 @@ flutter:
     pluginClass: CityPickersPlugin
   # To add assets to your plugin package, add an assets section, like this:
   assets:
-    - assets/icons/icon_input_clear.png
+    - packages/city_pickers/assets/icons/icon_input_clear.png
 
   #
   # For details regarding assets in packages, see

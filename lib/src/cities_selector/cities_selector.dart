@@ -9,6 +9,7 @@
 
 import 'dart:async';
 
+import 'package:city_pickers/src/cities_selector/tag.dart';
 import 'package:flutter/material.dart';
 
 import '../../meta/province.dart';
@@ -75,6 +76,9 @@ class CitiesSelector extends StatefulWidget {
 
   final Color itemFontColor;
 
+  /// 最近定位或者查找的城市
+  final List<String> recentCity;
+
   CitiesSelector({
     this.title = '城市选择器',
     this.locationCode,
@@ -98,6 +102,7 @@ class CitiesSelector extends StatefulWidget {
     this.tagBarFontFamily,
     this.cityItemFontFamily,
     this.topIndexFontFamily,
+    this.recentCity,
   });
 
   @override
@@ -120,10 +125,13 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 
   /// 城市列表数组
   List<Point> _cities = new List();
+  List<Point> _hotCities = [];
+
   ScrollController _scrollController;
 
   /// 用这个key 去标记一个item,用来在初始化后. 获取期高度
-  GlobalKey _key0 = new GlobalKey();
+  GlobalKey _keyCityItem = new GlobalKey();
+  GlobalKey _keyHotCity = new GlobalKey();
 
   /// 计算每一个letter or tag的列表区间范围
   /// 存放每个tag集的偏移start 与 end . 通过计算Alpha的位置, 判定滚动
@@ -149,7 +157,6 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 
   @override
   void initState() {
-    // TODO: implement initState
     print("hotCities::::: ${widget.hotCities}");
     _cities = CitiesUtils.getAllCitiesByMeta(
         widget.provincesData ?? provincesData, widget.citiesData ?? citiesData);
@@ -161,7 +168,6 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 
     _scrollController = new ScrollController();
     _controller = new TextEditingController();
-
     // 向tag 与 city 列表中加入 自定义数据
     formatHotCities();
     _scrollController.addListener(() {
@@ -180,21 +186,36 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 
   void formatHotCities() {
     if (widget.hotCities != null) {
-      List<Point> hotPoints = [];
-      List<String> hotTags = [];
+      /// TODO: 热门城市使用标签的方式显示
       widget.hotCities.forEach((HotCity hotCity) {
-        if (!hotTags.contains(hotCity.tag)) {
-          hotTags.add(hotCity.tag);
-        }
-        hotPoints.add(Point(
+        _hotCities.add(Point(
             code: hotCity.id,
             letter: hotCity.tag,
             name: hotCity.name,
             child: []));
       });
-      /// TODO: 热门城市使用标签的方式显示
-      _cities.insertAll(0, hotPoints);
-      _tagList.insertAll(0, hotTags);
+
+      _cities.insert(
+          0, Point(code: 0, letter: '#', name: '热门城市', child: _hotCities));
+
+      /// TODO: 将外部的热门标签使用一个字母对应一组城市
+      _tagList.insert(0, '#');
+
+//      List<Point> hotPoints = [];
+//      List<String> hotTags = [];
+//      widget.hotCities.forEach((HotCity hotCity) {
+//        if (!hotTags.contains(hotCity.tag)) {
+//          hotTags.add(hotCity.tag);
+//        }
+//        hotPoints.add(Point(
+//            code: hotCity.id,
+//            letter: hotCity.tag,
+//            name: hotCity.name,
+//            child: []));
+//      });
+//
+//      _cities.insertAll(0, hotPoints);
+//      _tagList.insertAll(0, hotTags);
     }
   }
 
@@ -211,16 +232,24 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   /// 只有当组件加载后. 才能获取_key0的高度,要保证该函数只会被执行一次
   List<CityOffsetRange> _initOffsetRangList() {
     if (_offsetTagRangeList.isEmpty) {
-      double itemContainerHeight =
-          _key0.currentContext.findRenderObject().paintBounds.size.height;
+      double itemContainerHeight = _keyCityItem.currentContext
+          .findRenderObject()
+          .paintBounds
+          .size
+          .height;
+
+      /// 热门城市高度
+      double hotCityContainerHeight =
+          _keyHotCity.currentContext.findRenderObject().paintBounds.size.height;
 
       double offstageHeight = topTagHeight;
-
       _offsetTagRangeList = CitiesUtils.getOffsetRangeByCitiesList(
           lists: _cities,
           tagHeight: offstageHeight,
+          hotCityHeight: hotCityContainerHeight,
           itemHeight: itemContainerHeight);
     }
+
     return _offsetTagRangeList;
   }
 
@@ -352,6 +381,10 @@ class _CitiesSelectorState extends State<CitiesSelector> {
           controller: _scrollController,
           itemCount: _cities.length,
           itemBuilder: (context, index) {
+            if (index == 0) {
+              return _buildHotCityContainer();
+            }
+
             bool offstage = false;
             bool selected = _initTargetCity != null &&
                 _initTargetCity.code == _cities[index].code;
@@ -360,6 +393,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                 _cities[index - 1].letter == _cities[index].letter) {
               offstage = true;
             }
+
             return Column(
               children: <Widget>[
                 Offstage(
@@ -381,7 +415,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                 ),
                 Container(
                   alignment: Alignment.centerLeft,
-                  key: index == 0 ? _key0 : null,
+                  key: index == 1 ? _keyCityItem : null,
                   child: Center(
                     child: ListTileTheme(
                       selectedColor:
@@ -420,7 +454,8 @@ class _CitiesSelectorState extends State<CitiesSelector> {
           }),
     );
 
-    if (_showTopOffstage) {
+    /// TODO: 添加动态顶部对齐方式
+    if (_showTopOffstage && _tagName != '#' && _tagName != null) {
       children.add(Positioned(
         top: _topOffstageTop,
         left: 0,
@@ -498,7 +533,21 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                 /// TODO: 光标颜色应该由外部传入定义
                 cursorColor: Color(0xFFFF7043),
                 onChanged: (value) {
-                  debugPrint("开始查询:$value");
+                  setState(() {
+                    List<Point> test = [];
+                    value = value.trim();
+                    if (value.length > 0) {
+                      test = _cities.where((Point point) {
+                        return point.letter != '#' &&
+                            (point.name.contains(value) ||
+                                point.letter == value.toUpperCase());
+                      }).toList();
+                      debugPrint("开始查询:${test.toString()}");
+                    } else {
+                      test.addAll([]);
+                      debugPrint("开始查询:$test");
+                    }
+                  });
                 },
                 style: TextStyle(
                   color: Colors.black,
@@ -506,17 +555,19 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                 ),
               ),
             ),
-            IconButton(
-                icon: Image.asset(
-                  'assets/icons/icon_input_clear.png',
-                  width: 10,
-                  height: 10,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _controller.clear();
-                  });
-                })
+            _controller.value.text.length > 0
+                ? IconButton(
+                    icon: Image.asset(
+                      'packages/city_pickers/assets/icons/icon_input_clear.png',
+                      width: 10,
+                      height: 10,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _controller.clear();
+                      });
+                    })
+                : Container(),
           ],
         ),
       ),
@@ -549,6 +600,85 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         ]);
   }
 
+  _buildHotCityContainer() {
+    return Container(
+      key: _keyHotCity,
+      padding: const EdgeInsets.only(left: 15, top: 15, bottom: 15),
+      decoration: BoxDecoration(
+        color: Color(0xFFF5F5F5),
+        border: Border(
+          top: BorderSide(
+            color: Color(0xFFE0E0E0),
+          ),
+          bottom: BorderSide(
+            color: Color(0xFFE0E0E0),
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '最近访问',
+            style: TextStyle(
+              color: Color(0xFF757575),
+              fontSize: 15,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: widget.recentCity != null
+                  ? widget.recentCity.map((city) {
+                      return TagContainer(
+                        content: city,
+                        height: 32.0,
+                        fontSize: 15,
+                        bgColor: Colors.white,
+                        padding: 18.0,
+                        radius: 16,
+                        fontColor: Color(0xFF212121),
+//                        fontWeight: FontWeight.w500,
+                      );
+                    }).toList()
+                  : [Container()],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Text(
+              '热门城市',
+              style: TextStyle(
+                color: Color(0xFF757575),
+                fontSize: 15,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Wrap(
+              spacing: 20,
+              runSpacing: 10,
+              children: _hotCities.map((point) {
+                return TagContainer(
+                  content: point.name,
+                  height: 32.0,
+                  fontSize: 15,
+                  radius: 5,
+                  bgColor: Colors.white,
+                  padding: 30.0,
+                  fontColor: Color(0xFF212121),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -568,7 +698,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                     Padding(
                       padding: const EdgeInsets.only(left: 14),
                       child: Text(
-                        '你正在深圳',
+                        '你正在${_initTargetCity.name}',
                         style: TextStyle(
                           color: Color(0xFF212121),
                           fontSize: 15,
