@@ -11,6 +11,7 @@ import 'dart:async';
 
 import 'package:city_pickers/src/cities_selector/tag.dart';
 import 'package:flutter/material.dart';
+import 'package:lpinyin/lpinyin.dart';
 
 import '../../meta/province.dart';
 import '../../modal/point.dart';
@@ -76,6 +77,9 @@ class CitiesSelector extends StatefulWidget {
 
   final Color itemFontColor;
 
+  /// 当前定位城市
+  final String locationCity;
+
   /// 最近定位或者查找的城市
   final List<String> recentCity;
 
@@ -103,6 +107,7 @@ class CitiesSelector extends StatefulWidget {
     this.cityItemFontFamily,
     this.topIndexFontFamily,
     this.recentCity,
+    this.locationCity,
   });
 
   @override
@@ -155,6 +160,10 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   /// 输入控制器
   TextEditingController _controller;
 
+  /// 查找结果列表
+  ScrollController _findScrollController;
+  List<Point> _findResults = [];
+
   @override
   void initState() {
     print("hotCities::::: ${widget.hotCities}");
@@ -167,6 +176,8 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     _tagList = CitiesUtils.getValidTagsByCityList(_cities);
 
     _scrollController = new ScrollController();
+
+    _findScrollController = new ScrollController();
     _controller = new TextEditingController();
     // 向tag 与 city 列表中加入 自定义数据
     formatHotCities();
@@ -491,6 +502,56 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     return children;
   }
 
+  _buildFindingResults(BuildContext context) {
+    ThemeData theme = Theme.of(context);
+    return Container(
+      color: Colors.white,
+      child: ListView.builder(
+          controller: _findScrollController,
+          itemCount: _findResults.length,
+          itemBuilder: (context, index) {
+            bool selected = _initTargetCity != null &&
+                _initTargetCity.code == _findResults[index].code;
+
+            return Container(
+              alignment: Alignment.centerLeft,
+              child: Center(
+                child: ListTileTheme(
+                  selectedColor:
+                      widget.itemSelectFontColor ?? theme.primaryColor,
+                  textColor: widget.itemFontColor ?? theme.accentColor,
+                  child: ListTile(
+                    selected: selected,
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          _findResults[index].name,
+                          style: TextStyle(
+                            fontSize: itemFontSize,
+                            fontFamily: itemFontFamily,
+                          ),
+                        ),
+                        selected
+                            ? Icon(
+                                Icons.check,
+                                size: itemFontSize,
+                                color: widget.itemSelectFontColor,
+                              )
+                            : Container()
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.pop(context, _buildResult(_findResults[index]));
+                    },
+                  ),
+                ),
+              ),
+            );
+          }),
+    );
+  }
+
   Widget _buildSearchInput() {
     return Container(
       padding: EdgeInsets.only(
@@ -534,18 +595,19 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                 cursorColor: Color(0xFFFF7043),
                 onChanged: (value) {
                   setState(() {
-                    List<Point> test = [];
                     value = value.trim();
                     if (value.length > 0) {
-                      test = _cities.where((Point point) {
-                        return point.letter != '#' &&
+                      _findResults = _cities.where((Point point) {
+                        return point.name != '热门城市' &&
                             (point.name.contains(value) ||
-                                point.letter == value.toUpperCase());
+                                PinyinHelper.getShortPinyin(point.name)
+                                    .toUpperCase()
+                                    .contains(value.toUpperCase()));
                       }).toList();
-                      debugPrint("开始查询:${test.toString()}");
+                      debugPrint("开始查询:${_findResults.toString()}");
                     } else {
-                      test.addAll([]);
-                      debugPrint("开始查询:$test");
+                      _findResults.clear();
+                      debugPrint("开始查询:$_findResults");
                     }
                   });
                 },
@@ -601,6 +663,35 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   }
 
   _buildHotCityContainer() {
+    List<Widget> cities = [];
+    cities.add(TagContainer(
+      content: widget.locationCity,
+      height: 32.0,
+      fontSize: 15,
+      bgColor: Colors.white,
+      padding: 18.0,
+      radius: 16,
+      fontColor: Color(0xFF212121),
+      fontWeight: FontWeight.w500,
+      frontIcon: Icon(
+        Icons.location_on,
+        color: Color(0xFFFF7043),
+        size: 14,
+      ),
+    ));
+
+    cities.addAll(widget.recentCity.map((city) {
+      return TagContainer(
+        content: city,
+        height: 32.0,
+        fontSize: 15,
+        bgColor: Colors.white,
+        padding: 18.0,
+        radius: 16,
+        fontColor: Color(0xFF212121),
+      );
+    }).toList());
+
     return Container(
       key: _keyHotCity,
       padding: const EdgeInsets.only(left: 15, top: 15, bottom: 15),
@@ -619,7 +710,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            '最近访问',
+            '定位/最近访问',
             style: TextStyle(
               color: Color(0xFF757575),
               fontSize: 15,
@@ -630,20 +721,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
             child: Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: widget.recentCity != null
-                  ? widget.recentCity.map((city) {
-                      return TagContainer(
-                        content: city,
-                        height: 32.0,
-                        fontSize: 15,
-                        bgColor: Colors.white,
-                        padding: 18.0,
-                        radius: 16,
-                        fontColor: Color(0xFF212121),
-//                        fontWeight: FontWeight.w500,
-                      );
-                    }).toList()
-                  : [Container()],
+              children: cities,
             ),
           ),
           Padding(
@@ -687,53 +765,64 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         appBar: _buildAppBar(),
         body: SafeArea(
           bottom: true,
-          child: Column(
-            children: <Widget>[
-              Container(
-                color: Colors.white,
-                height: 44,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(left: 14),
-                      child: Text(
-                        '你正在${_initTargetCity.name}',
-                        style: TextStyle(
-                          color: Color(0xFF212121),
-                          fontSize: 15,
+          child: Stack(children: <Widget>[
+            Column(
+              children: <Widget>[
+                Container(
+                  color: Colors.white,
+                  height: 44,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 14),
+                        child: Text(
+                          '你正在${_initTargetCity.name}',
+                          style: TextStyle(
+                            color: Color(0xFF212121),
+                            fontSize: 15,
+                          ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 14),
-                      child: GestureDetector(
-                        onTap: () => debugPrint('选择县区'),
-                        child: Row(
-                          children: <Widget>[
-                            Text(
-                              '选择县区',
-                              style: TextStyle(
-                                color: Color(0xFF757575),
-                                fontSize: 12,
-                              ),
-                            ),
-                            Icon(
-                              Icons.keyboard_arrow_down,
-                              size: 12,
-                              color: Color(0xFF9E9E9E),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                      ///TODO: 选择县区
+//                      Padding(
+//                        padding: const EdgeInsets.only(right: 14),
+//                        child: GestureDetector(
+//                          onTap: () => debugPrint('选择县区'),
+//                          child: Row(
+//                            children: <Widget>[
+//                              Text(
+//                                '选择县区',
+//                                style: TextStyle(
+//                                  color: Color(0xFF757575),
+//                                  fontSize: 12,
+//                                ),
+//                              ),
+//                              Icon(
+//                                Icons.keyboard_arrow_down,
+//                                size: 12,
+//                                color: Color(0xFF9E9E9E),
+//                              )
+//                            ],
+//                          ),
+//                        ),
+//                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
-                  flex: 1, child: Stack(children: _buildChildren(context))),
-            ],
-          ),
+                Expanded(
+                    flex: 1, child: Stack(children: _buildChildren(context))),
+              ],
+            ),
+            _findResults.length > 0
+                ? Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: _buildFindingResults(context))
+                : Container(),
+          ]),
         ));
   }
 }

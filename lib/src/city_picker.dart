@@ -191,7 +191,8 @@ class CityPickers {
                 itemFontColor: _cityItemStyle.color,
                 cityItemFontSize: _cityItemStyle.fontSize,
                 itemSelectFontColor: _cityItemStyle.activeColor,
-                recentCity: ['深圳','北京','西乡'],
+                locationCity: '深圳',
+                recentCity: ['北京', '西乡'],
               )),
           transitionsBuilder:
               (_, Animation<double> animation, __, Widget child) =>

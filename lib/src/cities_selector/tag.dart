@@ -11,6 +11,8 @@ class TagContainer extends StatelessWidget {
   final double borderWidth;
   final Color borderColor;
   final FontWeight fontWeight;
+  final Widget frontIcon;
+  final Widget afterIcon;
 
   TagContainer({
     @required this.content,
@@ -24,11 +26,28 @@ class TagContainer extends StatelessWidget {
     this.borderColor = Colors.white,
     Key key,
     this.fontWeight,
+    this.frontIcon,
+    this.afterIcon,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (content == null) return Wrap();
+
+    List<Widget> widgets = [];
+    if (frontIcon != null) widgets.add(frontIcon);
+
+    widgets.add(Text(
+      content,
+      style: TextStyle(
+        fontSize: fontSize,
+        color: fontColor,
+        fontWeight: fontWeight,
+      ),
+    ));
+
+    if (afterIcon != null) widgets.add(afterIcon);
+
     return IntrinsicWidth(
       child: Container(
         height: height,
@@ -42,13 +61,8 @@ class TagContainer extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(radius),
         ),
-        child: Text(
-          content,
-          style: TextStyle(
-            fontSize: fontSize,
-            color: fontColor,
-            fontWeight: fontWeight,
-          ),
+        child: Row(
+          children: widgets,
         ),
       ),
     );
