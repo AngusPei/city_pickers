@@ -115,7 +115,7 @@ class CitiesUtils {
 class HotCity {
   final String name;
   final int id;
-  final String tag;
-
-  HotCity({@required this.name, @required this.id, this.tag = "#"});
+  /// 热门城市取消自定义标签
+//  final String tag;
+  HotCity({@required this.name, @required this.id/*, this.tag = "#" */});
 }

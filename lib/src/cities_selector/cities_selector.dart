@@ -83,6 +83,13 @@ class CitiesSelector extends StatefulWidget {
   /// 最近定位或者查找的城市
   final List<String> recentCity;
 
+  final Color appBarBgColor;
+
+  /// 中心字母颜色
+  final Color modalBgColor;
+
+  final Color cursorColor;
+
   CitiesSelector({
     this.title = '城市选择器',
     this.locationCode,
@@ -108,6 +115,9 @@ class CitiesSelector extends StatefulWidget {
     this.topIndexFontFamily,
     this.recentCity,
     this.locationCity,
+    this.appBarBgColor = const Color(0xFFFF7043),
+    this.modalBgColor = const Color(0xD9FF7043),
+    this.cursorColor = const Color(0xFFFF7043),
   });
 
   @override
@@ -197,11 +207,12 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 
   void formatHotCities() {
     if (widget.hotCities != null) {
-      /// TODO: 热门城市使用标签的方式显示
       widget.hotCities.forEach((HotCity hotCity) {
         _hotCities.add(Point(
             code: hotCity.id,
-            letter: hotCity.tag,
+
+            /// 不使用外部的热门标签
+            letter: '#',
             name: hotCity.name,
             child: []));
       });
@@ -209,7 +220,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
       _cities.insert(
           0, Point(code: 0, letter: '#', name: '热门城市', child: _hotCities));
 
-      /// TODO: 将外部的热门标签使用一个字母对应一组城市
+      /// 将外部的热门标签使用一个字母对应一组城市
       _tagList.insert(0, '#');
 
 //      List<Point> hotPoints = [];
@@ -324,8 +335,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   Widget _buildCenterModal() {
     return Center(
       child: Card(
-        /// TODO: 当前颜色和透明度应该从外部传入
-        color: Color(0xD9FF7043),
+        color: widget.modalBgColor,
         // color: Colors.grey[850],
         child: Container(
           alignment: Alignment.center,
@@ -591,8 +601,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                   ),
                 ),
 
-                /// TODO: 光标颜色应该由外部传入定义
-                cursorColor: Color(0xFFFF7043),
+                cursorColor: widget.cursorColor,
                 onChanged: (value) {
                   setState(() {
                     value = value.trim();
@@ -642,9 +651,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         titleSpacing: 15,
         centerTitle: false,
         elevation: 0,
-
-        /// TODO: 外部传入
-        backgroundColor: Color(0xFFFF7043),
+        backgroundColor: widget.appBarBgColor,
         automaticallyImplyLeading: false,
         brightness: Brightness.light,
         actions: <Widget>[
@@ -784,7 +791,8 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                           ),
                         ),
                       ),
-                      ///TODO: 选择县区
+
+                      ///TODO: 选择县区待添加
 //                      Padding(
 //                        padding: const EdgeInsets.only(right: 14),
 //                        child: GestureDetector(
