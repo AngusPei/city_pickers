@@ -635,6 +635,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                     ),
                     onPressed: () {
                       setState(() {
+                        _findResults.clear();
                         _controller.clear();
                       });
                     })
