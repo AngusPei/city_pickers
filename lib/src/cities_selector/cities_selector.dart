@@ -208,7 +208,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     if (widget.hotCities != null) {
       widget.hotCities.forEach((City hotCity) {
         _hotCities.add(Point(
-            code: hotCity.code,
+            code: hotCity.cityId,
 
             /// 不使用外部的热门标签
             letter: '#',
@@ -228,7 +228,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     if (widget.recentCities != null) {
       widget.recentCities.forEach((recentCity) {
         _recentCities.add(Point(
-          code: recentCity.code,
+          code: recentCity.cityId,
           name: recentCity.name,
         ));
       });

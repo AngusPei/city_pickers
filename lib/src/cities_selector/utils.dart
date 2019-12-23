@@ -114,8 +114,8 @@ class CitiesUtils {
 // 城市对象
 class City {
   final String name;
-  final int code;
+  final int cityId;
   /// 热门城市取消自定义标签
 //  final String tag;
-  City({@required this.name, @required this.code/*, this.tag = "#" */});
+  City({@required this.name, @required this.cityId/*, this.tag = "#" */});
 }

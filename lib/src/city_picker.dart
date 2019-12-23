@@ -193,8 +193,8 @@ class CityPickers {
                 cityItemFontSize: _cityItemStyle.fontSize,
                 itemSelectFontColor: _cityItemStyle.activeColor,
                 recentCities: [
-                  City(code: 110108, name: '北京海淀区'),
-                  City(code: 440300, name: '深圳市')
+                  City(cityId: 110108, name: '北京海淀区'),
+                  City(cityId: 440300, name: '深圳市')
                 ],
               )),
           transitionsBuilder:
