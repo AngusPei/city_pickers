@@ -33,7 +33,7 @@ class CitiesSelector extends StatefulWidget {
   final String title;
   final Map<String, dynamic> provincesData;
   final Map<String, dynamic> citiesData;
-  final List<HotCity> hotCities;
+  final List<City> hotCities;
 
   /// 定义右侧bar的激活与普通状态的颜色
   final Color tagBarBgColor;
@@ -77,11 +77,8 @@ class CitiesSelector extends StatefulWidget {
 
   final Color itemFontColor;
 
-  /// 当前定位城市
-  final String locationCity;
-
   /// 最近定位或者查找的城市
-  final List<String> recentCity;
+  final List<City> recentCities;
 
   final Color appBarBgColor;
 
@@ -92,7 +89,7 @@ class CitiesSelector extends StatefulWidget {
 
   CitiesSelector({
     this.title = '城市选择器',
-    this.locationCode,
+    @required this.locationCode,
     this.citiesData,
     this.hotCities,
     this.provincesData,
@@ -113,8 +110,7 @@ class CitiesSelector extends StatefulWidget {
     this.tagBarFontFamily,
     this.cityItemFontFamily,
     this.topIndexFontFamily,
-    this.recentCity,
-    this.locationCity,
+    this.recentCities,
     this.appBarBgColor = const Color(0xFFFF7043),
     this.modalBgColor = const Color(0xD9FF7043),
     this.cursorColor = const Color(0xFFFF7043),
@@ -141,6 +137,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   /// 城市列表数组
   List<Point> _cities = new List();
   List<Point> _hotCities = [];
+  List<Point> _recentCities = [];
 
   ScrollController _scrollController;
 
@@ -156,16 +153,16 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   List<String> _tagList;
 
   /// 每一个顶部标签的高度
-  double topTagHeight;
+  double _topTagHeight;
 
   /// 用户可定义的, 每一个选项的高度
 //  double itemHeight;
 
   /// 用户可定义的, 选项中字体的大小
-  double itemFontSize;
+  double _itemFontSize;
 
   /// 用户可定义的，选项中字体的样式
-  String itemFontFamily;
+  String _itemFontFamily;
 
   /// 输入控制器
   TextEditingController _controller;
@@ -181,6 +178,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         widget.provincesData ?? provincesData, widget.citiesData ?? citiesData);
     print("_cities::: $_cities");
     _initTargetCity = getInitialCityCode();
+
 //    print("_cities>>> ${_cities.length}");
 //    print("locationCode ${widget.locationCode}");
     _tagList = CitiesUtils.getValidTagsByCityList(_cities);
@@ -191,6 +189,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     _controller = new TextEditingController();
     // 向tag 与 city 列表中加入 自定义数据
     formatHotCities();
+    formatRecentCities();
     _scrollController.addListener(() {
       _initOffsetRangList();
 //      可以用来强行关闭键盘
@@ -199,17 +198,17 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     });
     super.initState();
 
-    topTagHeight = widget.topIndexHeight;
+    _topTagHeight = widget.topIndexHeight;
 //    itemHeight = widget.cityItemHeight;
-    itemFontSize = widget.cityItemFontSize;
-    itemFontFamily = widget.cityItemFontFamily;
+    _itemFontSize = widget.cityItemFontSize;
+    _itemFontFamily = widget.cityItemFontFamily;
   }
 
   void formatHotCities() {
     if (widget.hotCities != null) {
-      widget.hotCities.forEach((HotCity hotCity) {
+      widget.hotCities.forEach((City hotCity) {
         _hotCities.add(Point(
-            code: hotCity.id,
+            code: hotCity.code,
 
             /// 不使用外部的热门标签
             letter: '#',
@@ -222,22 +221,17 @@ class _CitiesSelectorState extends State<CitiesSelector> {
 
       /// 将外部的热门标签使用一个字母对应一组城市
       _tagList.insert(0, '#');
+    }
+  }
 
-//      List<Point> hotPoints = [];
-//      List<String> hotTags = [];
-//      widget.hotCities.forEach((HotCity hotCity) {
-//        if (!hotTags.contains(hotCity.tag)) {
-//          hotTags.add(hotCity.tag);
-//        }
-//        hotPoints.add(Point(
-//            code: hotCity.id,
-//            letter: hotCity.tag,
-//            name: hotCity.name,
-//            child: []));
-//      });
-//
-//      _cities.insertAll(0, hotPoints);
-//      _tagList.insertAll(0, hotTags);
+  void formatRecentCities() {
+    if (widget.recentCities != null) {
+      widget.recentCities.forEach((recentCity) {
+        _recentCities.add(Point(
+          code: recentCity.code,
+          name: recentCity.name,
+        ));
+      });
     }
   }
 
@@ -264,7 +258,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
       double hotCityContainerHeight =
           _keyHotCity.currentContext.findRenderObject().paintBounds.size.height;
 
-      double offstageHeight = topTagHeight;
+      double offstageHeight = _topTagHeight;
       _offsetTagRangeList = CitiesUtils.getOffsetRangeByCitiesList(
           lists: _cities,
           tagHeight: offstageHeight,
@@ -287,18 +281,18 @@ class _CitiesSelectorState extends State<CitiesSelector> {
     }
 
     // 跟随滚动, 因为滚动精度问题. 实际上很难到让_topOffstageTop=0;
-    if (scrollTopOffset + topTagHeight >= tempViewTarget.end) {
+    if (scrollTopOffset + _topTagHeight >= tempViewTarget.end) {
       return this.setState(() {
         _tagName = tempViewTarget.tag;
         _topOffstageTop =
-            -(scrollTopOffset + topTagHeight - tempViewTarget.end);
+            -(scrollTopOffset + _topTagHeight - tempViewTarget.end);
       });
     }
 
     // 修正topStage的位置, 分二种情况将期归0
     // 第一种情况, 是当上方动态跟随. 精度达到预期时._topOffstageTop 被置0
     // 第二种. 当则是补偿以上的运行
-    if (_topOffstageTop < -topTagHeight && _topOffstageTop != 0) {
+    if (_topOffstageTop < -_topTagHeight && _topOffstageTop != 0) {
       this.setState(() {
         _topOffstageTop = 0;
       });
@@ -420,7 +414,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                 Offstage(
                   offstage: offstage,
                   child: Container(
-                    height: topTagHeight,
+                    height: _topTagHeight,
                     alignment: Alignment.centerLeft,
                     padding: const EdgeInsets.only(left: 15.0),
                     color: widget.topIndexBgColor,
@@ -450,14 +444,14 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                             Text(
                               _cities[index].name,
                               style: TextStyle(
-                                fontSize: itemFontSize,
-                                fontFamily: itemFontFamily,
+                                fontSize: _itemFontSize,
+                                fontFamily: _itemFontFamily,
                               ),
                             ),
                             selected
                                 ? Icon(
                                     Icons.check,
-                                    size: itemFontSize,
+                                    size: _itemFontSize,
                                     color: widget.itemSelectFontColor,
                                   )
                                 : Container()
@@ -484,7 +478,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
         child: Offstage(
           offstage: false,
           child: Container(
-            height: topTagHeight,
+            height: _topTagHeight,
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.only(left: 15.0),
             color: widget.topIndexBgColor,
@@ -538,14 +532,14 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                         Text(
                           _findResults[index].name,
                           style: TextStyle(
-                            fontSize: itemFontSize,
-                            fontFamily: itemFontFamily,
+                            fontSize: _itemFontSize,
+                            fontFamily: _itemFontFamily,
                           ),
                         ),
                         selected
                             ? Icon(
                                 Icons.check,
-                                size: itemFontSize,
+                                size: _itemFontSize,
                                 color: widget.itemSelectFontColor,
                               )
                             : Container()
@@ -600,7 +594,6 @@ class _CitiesSelectorState extends State<CitiesSelector> {
                     fontSize: 12,
                   ),
                 ),
-
                 cursorColor: widget.cursorColor,
                 onChanged: (value) {
                   setState(() {
@@ -673,7 +666,8 @@ class _CitiesSelectorState extends State<CitiesSelector> {
   _buildHotCityContainer() {
     List<Widget> cities = [];
     cities.add(TagContainer(
-      content: widget.locationCity,
+      onPressed: () => Navigator.pop(context, _buildResult(_initTargetCity)),
+      content: _initTargetCity.name,
       height: 32.0,
       fontSize: 15,
       bgColor: Colors.white,
@@ -688,17 +682,19 @@ class _CitiesSelectorState extends State<CitiesSelector> {
       ),
     ));
 
-    cities.addAll(widget.recentCity.map((city) {
-      return TagContainer(
-        content: city,
-        height: 32.0,
-        fontSize: 15,
-        bgColor: Colors.white,
-        padding: 18.0,
-        radius: 16,
-        fontColor: Color(0xFF212121),
-      );
-    }).toList());
+    if (_recentCities.length > 0)
+      cities.addAll(_recentCities.map((recentCity) {
+        return TagContainer(
+          onPressed: () => Navigator.pop(context, _buildResult(recentCity)),
+          content: recentCity.name,
+          height: 32.0,
+          fontSize: 15,
+          bgColor: Colors.white,
+          padding: 18.0,
+          radius: 16,
+          fontColor: Color(0xFF212121),
+        );
+      }).toList());
 
     return Container(
       key: _keyHotCity,
@@ -749,6 +745,7 @@ class _CitiesSelectorState extends State<CitiesSelector> {
               runSpacing: 10,
               children: _hotCities.map((point) {
                 return TagContainer(
+                  onPressed: () => Navigator.pop(context, _buildResult(point)),
                   content: point.name,
                   height: 32.0,
                   fontSize: 15,

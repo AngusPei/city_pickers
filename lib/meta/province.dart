@@ -37,7 +37,7 @@ const Map<String, String> provincesData = {
 
 const Map<String, dynamic> citiesData = {
   "110000": {
-    "110100": {"name": "北京城区", "alpha": "b"}
+    "110100": {"name": "北京", "alpha": "b"}
   },
   "110100": {
     "110101": {"name": "东城区", "alpha": "d"},

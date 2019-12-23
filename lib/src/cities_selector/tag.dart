@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+//typedef VoidCallback = void Function();
+
 class TagContainer extends StatelessWidget {
   final String content;
   final double height;
@@ -13,9 +15,11 @@ class TagContainer extends StatelessWidget {
   final FontWeight fontWeight;
   final Widget frontIcon;
   final Widget afterIcon;
+  final VoidCallback onPressed;
 
   TagContainer({
     @required this.content,
+    this.onPressed,
     this.height = 18.0,
     this.radius = 9.0,
     this.padding = 8.0,
@@ -49,20 +53,23 @@ class TagContainer extends StatelessWidget {
     if (afterIcon != null) widgets.add(afterIcon);
 
     return IntrinsicWidth(
-      child: Container(
-        height: height,
-        padding: EdgeInsets.symmetric(horizontal: padding),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          border: Border.all(
-            width: borderWidth,
-            color: borderColor,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          height: height,
+          padding: EdgeInsets.symmetric(horizontal: padding),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border.all(
+              width: borderWidth,
+              color: borderColor,
+            ),
+            color: bgColor,
+            borderRadius: BorderRadius.circular(radius),
           ),
-          color: bgColor,
-          borderRadius: BorderRadius.circular(radius),
-        ),
-        child: Row(
-          children: widgets,
+          child: Row(
+            children: widgets,
+          ),
         ),
       ),
     );

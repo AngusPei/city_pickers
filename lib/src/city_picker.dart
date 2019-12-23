@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:city_pickers/city_pickers.dart';
 import 'package:city_pickers/src/base/base.dart';
 import 'package:city_pickers/src/cities_selector/cities_selector.dart';
 import 'package:city_pickers/src/cities_selector/utils.dart';
@@ -139,7 +140,7 @@ class CityPickers {
     String title = '城市选择器',
     Map<String, dynamic> citiesData = meta.citiesData,
     Map<String, dynamic> provincesData = meta.provincesData,
-    List<HotCity> hotCities,
+    List<City> hotCities,
     BaseStyle sideBarStyle,
     BaseStyle cityItemStyle,
     BaseStyle topStickStyle,
@@ -191,8 +192,10 @@ class CityPickers {
                 itemFontColor: _cityItemStyle.color,
                 cityItemFontSize: _cityItemStyle.fontSize,
                 itemSelectFontColor: _cityItemStyle.activeColor,
-                locationCity: '深圳',
-                recentCity: ['北京', '西乡'],
+                recentCities: [
+                  City(code: 110108, name: '北京海淀区'),
+                  City(code: 440300, name: '深圳市')
+                ],
               )),
           transitionsBuilder:
               (_, Animation<double> animation, __, Widget child) =>

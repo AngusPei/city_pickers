@@ -111,11 +111,11 @@ class CitiesUtils {
   }
 }
 
-// 热闹城市对象
-class HotCity {
+// 城市对象
+class City {
   final String name;
-  final int id;
+  final int code;
   /// 热门城市取消自定义标签
 //  final String tag;
-  HotCity({@required this.name, @required this.id/*, this.tag = "#" */});
+  City({@required this.name, @required this.code/*, this.tag = "#" */});
 }
